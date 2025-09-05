@@ -4,13 +4,16 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { CATEGORIES, getTemplateList } from "@/mock/templates";
+
 
 async function fetchTemplates(q?: string, cat?: string) {
-  let list = getTemplateList();
-  if (q) list = list.filter((t) => t.templateName.includes(q) || t.description.includes(q));
-  if (cat && cat !== "全部") list = list.filter((t) => t.category === cat);
-  return list;
+  // Fetch from backend
+  type Item = { templateId: string; templateName: string; description: string; thumbnailUrl: string; category?: string };
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/templates`, { cache: "no-store" });
+  let templates: Item[] = (await res.json()).data;
+  if (q) templates = templates.filter((t) => t.templateName.includes(q) || t.description.includes(q));
+  if (cat && cat !== "全部") templates = templates.filter((t) => (t.category || "通用") === cat);
+  return templates;
 }
 
 export default async function TemplatesPage({
@@ -31,7 +34,7 @@ export default async function TemplatesPage({
         </form>
       </div>
       <div className="flex gap-2 flex-wrap">
-        {["全部", ...CATEGORIES].map((c) => (
+        {["全部", ...Array.from(new Set(templates.map((t: any) => t.category || "通用")))].map((c) => (
           <Link key={c} href={{ pathname: "/templates", query: { q: q || "", cat: c } }}>
             <Badge variant={cat === c || (!cat && c === "全部") ? "default" : "secondary"}>{c}</Badge>
           </Link>

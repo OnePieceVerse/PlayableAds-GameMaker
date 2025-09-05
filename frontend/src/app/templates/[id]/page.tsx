@@ -3,13 +3,25 @@ import { AssetOriginalInfo } from "@/components/asset-original-info";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { StartCustomizationButton } from "@/components/start-customization-button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DeviceFrame } from "@/components/device-frame";
-import { getTemplateById } from "@/mock/templates";
+import { IncrementStat } from "@/components/increment-stat";
 
-async function getTemplate(id: string) {
-  return getTemplateById(id);
+
+type TemplateDetailDto = {
+  templateId: string;
+  templateName: string;
+  category?: string;
+  description: string;
+  thumbnailUrl: string;
+  assets: any[];
+};
+
+async function getTemplate(id: string): Promise<TemplateDetailDto> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/templates/${id}`, { cache: "no-store" });
+  return (await res.json()).data;
 }
 
 export default async function TemplateDetailPage({
@@ -43,6 +55,7 @@ export default async function TemplateDetailPage({
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
       <div className="space-y-4">
+        <IncrementStat templateId={data.templateId} kind="preview" />
         <DeviceFrame>
           <iframe
             src={`/templates/${data.templateId}/index.html`}
@@ -56,16 +69,7 @@ export default async function TemplateDetailPage({
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{data.templateName}</h1>
           </div>
-          {(() => {
-            const projectId = `p_${Math.random().toString(36).slice(2, 10)}`;
-            const defaultName = encodeURIComponent(`${data.templateName}`);
-            const href = `/editor/${projectId}?templateId=${data.templateId}&name=${defaultName}`;
-            return (
-              <Button asChild className="px-8">
-                <Link href={href}>去定制</Link>
-              </Button>
-            );
-          })()}
+          <StartCustomizationButton templateId={data.templateId} templateName={data.templateName} className="px-8" />
         </div>
 
         <div className="space-y-3 text-sm">

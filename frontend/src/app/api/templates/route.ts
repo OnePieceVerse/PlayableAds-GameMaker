@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { getTemplateList } from "@/mock/templates";
 
 export async function GET() {
-  return NextResponse.json({ data: getTemplateList() });
+  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const res = await fetch(`${base}/templates`, { cache: "no-store" });
+  const data = await res.json();
+  return NextResponse.json({ data });
 }
 
 

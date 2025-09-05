@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 
 import { toast } from "sonner";
 import { TemplateDetail } from "@/types";
+import { API_BASE } from "@/lib/api";
 import { validateFileAgainstAsset } from "@/lib/validation";
 
 async function fetchTemplate(id: string): Promise<TemplateDetail> {
@@ -86,10 +87,30 @@ export default function EditorPage() {
   async function generatePreview() {
     if (!tpl) return;
     // 素材均可不替换，直接进入预览
+    // Upload chosen files before navigate
+    try {
+      for (const [defId, f] of Object.entries(files)) {
+        if (!f) continue;
+        const cat = (tpl.assets.find((a) => a.assetDefId === defId)?.assetType || "image") + "s";
+        const fd = new FormData();
+        fd.set("file", f as File);
+        fd.set("category", cat);
+        fd.set("filename", f.name);
+        await fetch(`/api/projects/${params.projectId}/assets`, { method: "POST", body: fd });
+      }
+    } catch {}
     setPreviewReady(true);
     toast.success("正在跳转预览页");
     const url = new URL(window.location.href);
     url.pathname = `/editor/${params.projectId}/preview`;
+    // Forward via Next API routes
+    fetch(`/api/templates/${tpl.templateId}/stats/preview`, { method: "POST" }).catch(() => {});
+    // Ensure project persisted via Next API route
+    const fd = new FormData();
+    fd.set("projectId", params.projectId);
+    fd.set("templateId", tpl.templateId);
+    fd.set("projectName", projectName);
+    fetch(`/api/projects`, { method: "POST", body: fd }).catch(()=>{});
     window.location.href = `${url.pathname}?templateId=${tpl.templateId}&name=${encodeURIComponent(projectName)}`;
   }
 
