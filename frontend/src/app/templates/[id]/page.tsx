@@ -58,7 +58,7 @@ export default async function TemplateDetailPage({
           </div>
           {(() => {
             const projectId = `p_${Math.random().toString(36).slice(2, 10)}`;
-            const defaultName = encodeURIComponent(`${data.templateName}项目`);
+            const defaultName = encodeURIComponent(`${data.templateName}`);
             const href = `/editor/${projectId}?templateId=${data.templateId}&name=${defaultName}`;
             return (
               <Button asChild className="px-8">
