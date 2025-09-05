@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>拼图挑战 - Demo</title>
+    <style>
+      html, body, #app { height: 100%; margin: 0; }
+      #app { display: grid; place-items: center; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+      .box { width: 80%; max-width: 600px; aspect-ratio: 16/9; border: 2px dashed #999; display: grid; place-items: center; color: #666; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="box">拼图挑战 模板预览（示意，可在此接入真实游戏）</div>
+    </div>
+    <script>
+      // 模拟可交互行为（点击计数）
+      let clicks = 0;
+      document.querySelector('.box').addEventListener('click', () => {
+        clicks++;
+        document.querySelector('.box').textContent = `点击次数：${clicks}`;
+      });
+    </script>
+  </body>
+  </html>
+
