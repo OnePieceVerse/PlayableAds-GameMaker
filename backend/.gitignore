@@ -7,3 +7,5 @@
 *.pywz
 *.pyzw
 *.pyzwz
+*.DS_Store
+*.vscode

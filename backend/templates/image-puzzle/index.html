@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>H5 拼图游戏 - Image Puzzle</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-bg" id="pageBg"></div>
+    <div class="app">
+      <div class="hud" aria-live="polite">
+        <div class="timer" aria-label="倒计时"><span id="timerText">02:00</span></div>
+      </div>
+      <main id="game" class="game" role="main" aria-label="拼图游戏">
+        <section id="board" class="board" aria-label="拼图区域"></section>
+        <aside id="pieces" class="pieces" aria-label="图块池"></aside>
+      </main>
+
+      <footer class="help">
+      </footer>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./main.js"></script>
+  </body>
+  </html>
+
+
