@@ -1,17 +1,14 @@
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import select, func
-from .db import get_session, Templates, TemplateAssets, TemplateAnalytics, OperationLogs
-from datetime import datetime
+from sqlalchemy import select
+from .db import get_session, Templates, TemplateAssets, TemplateAnalytics
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 
-def get_edit_count(s, template_id: str) -> int:
-    return s.execute(
-        select(func.count()).select_from(OperationLogs).where(
-            OperationLogs.template_id == template_id,
-            OperationLogs.operation_type == "edit",
-        )
-    ).scalar_one()
+def get_edit_count(s, template_id: int) -> int:
+    row = s.execute(
+        select(TemplateAnalytics).where(TemplateAnalytics.template_id == template_id)
+    ).scalar_one_or_none()
+    return row.edit_count if row else 0
 
 @router.get("")
 async def list_templates():
@@ -23,7 +20,9 @@ async def list_templates():
                 "templateId": r.template_id,
                 "templateName": r.template_name,
                 "category": getattr(r, "template_category", None),
-                "description": r.description,
+                "description": r.template_desc,
+                "gameplay": r.template_gameplay,
+                "tags": r.template_tags,
                 "thumbnailUrl": r.thumbnail_url,
                 "analytics": {
                     "previewCount": stats_map.get(r.template_id).preview_count if stats_map.get(r.template_id) else 0,
@@ -35,41 +34,41 @@ async def list_templates():
         ]
 
 @router.get("/{template_id}")
-async def get_template(template_id: str):
+async def get_template(template_id: int):
     with get_session() as s:
         tpl = s.get(Templates, template_id)
         if not tpl:
             raise HTTPException(404, "Template not found")
         assets = s.execute(
-            select(TemplateAssets).where(TemplateAssets.template_id == template_id).order_by(TemplateAssets.display_order)
+            select(TemplateAssets).where(TemplateAssets.template_id == template_id)
         ).scalars().all()
         return {
             "templateId": tpl.template_id,
             "templateName": tpl.template_name,
+            "templateTitle": tpl.template_title,
             "category": getattr(tpl, "template_category", None),
-            "description": tpl.description,
+            "description": tpl.template_desc,
+            "gameplay": tpl.template_gameplay,
+            "tags": tpl.template_tags,
             "thumbnailUrl": tpl.thumbnail_url,
             "assets": [
                 {
-                    "assetDefId": a.asset_def_id,
-                    "assetKey": a.asset_key,
+                    "assetId": a.asset_id,
                     "assetName": a.asset_name,
                     "assetType": a.asset_type,
+                    "assetFileName": a.asset_file_name,
                     "allowedFormats": a.allowed_formats,
-                    "maxFileSizeMb": a.max_file_size_mb,
+                    "maxFileSizeKb": a.max_file_size_kb,
                     "requiredWidth": a.required_width,
                     "requiredHeight": a.required_height,
-                    "allowResize": a.allow_resize,
-                    "placeholderUrl": a.placeholder_path or a.placeholder_cos_url,
                     "isRequired": a.is_required,
-                    "displayOrder": a.display_order,
                 }
                 for a in assets
             ],
         }
 
 @router.get("/{template_id}/stats")
-async def get_stats(template_id: str):
+async def get_stats(template_id: int):
     with get_session() as s:
         sa = s.execute(select(TemplateAnalytics).where(TemplateAnalytics.template_id == template_id)).scalar_one_or_none()
         return {
@@ -79,26 +78,22 @@ async def get_stats(template_id: str):
         }
 
 @router.post("/{template_id}/stats/{kind}")
-async def inc_stats(template_id: str, kind: str):
+async def inc_stats(template_id: int, kind: str):
     if kind not in {"preview", "edit", "export"}:
         raise HTTPException(400, "invalid kind")
     with get_session() as s:
-        sa = s.execute(select(TemplateAnalytics).where(TemplateAnalytics.template_id == template_id)).scalar_one_or_none()
-        if not sa:
-            sa = TemplateAnalytics(analytics_id=f"an_{template_id}", template_id=template_id, preview_count=0, export_count=0)
+        sa = s.execute(
+            select(TemplateAnalytics).where(TemplateAnalytics.template_id == template_id)
+        ).scalar_one_or_none()
+        if sa is None:
+            sa = TemplateAnalytics(template_id=template_id, edit_count=0, preview_count=0, export_count=0)
             s.add(sa)
-        if kind == "preview":
+
+        if kind == "edit":
+            sa.edit_count += 1
+        elif kind == "preview":
             sa.preview_count += 1
         elif kind == "export":
             sa.export_count += 1
-        # log operation
-        s.add(OperationLogs(
-            log_id=f"log_{template_id}_{kind}_{datetime.utcnow().timestamp()}",
-            project_id=None,
-            template_id=template_id,
-            operation_type=kind if kind in ("preview", "export") else "edit",
-            operation_status="success",
-            operation_details={}
-        ))
         s.commit()
         return {"ok": True}
