@@ -73,56 +73,80 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 数据库初始化与模板数据
-请根据 `app/db.py` 的 ORM 字段自行建表并准备数据（根目录 `schema.sql` 可作参考，但以 ORM 字段命名为准）：
-- `templates`：`template_id`, `template_name`, `template_category`, `description`, `thumbnail_url`, `template_files_path`, `is_active`
-- `template_assets`：`asset_def_id`, `template_id`, `asset_key`, `asset_name`, `asset_type`, `allowed_formats`, `max_file_size_mb`, `required_width`, `required_height`, `allow_resize`, `placeholder_path`, `placeholder_cos_url`, `is_required`, `display_order`
-- `projects`：`project_id`, `template_id`, `project_name`, `user_id`, `preview_url`, `export_zip_path`, `status`
-- `template_analytics`：`analytics_id`, `template_id`, `preview_count`, `export_count`
-- `operation_logs`：`log_id`, `project_id`, `template_id`, `operation_type`, `operation_status`, `operation_details`
-
-示例模板记录（确保 `template_files_path` 对应 `backend/templates` 下的目录，例如示例为 `image-puzzle`）：
-```
-INSERT INTO templates (template_id, template_name, template_category, description, thumbnail_url, template_files_path, is_active)
-VALUES ('tpl_puzzle_001', 'puzzle_001', 'puzzle', '示例拼图模板', NULL, 'image-puzzle', 1);
-```
 
 ## API
 - GET `/health`
   - 数据库连通性检测
 
-- GET `/templates`
-  - 模板列表，包含 `analytics.previewCount/exportCount/editCount`
+- 模板（Templates）
+  - GET `/templates`
+    - 模板列表，包含 `analytics.previewCount/exportCount/editCount`
+  - GET `/templates/{template_id}`
+    - 模板详情与素材清单
+  - GET `/templates/{template_id}/stats`
+    - 返回该模板的统计数据
+  - POST `/templates/{template_id}/stats/{kind}`
+    - `kind` ∈ {`preview`, `edit`, `export`}
+    - 递增统计计数
 
-- GET `/templates/{template_id}`
-  - 模板详情与素材清单
-
-- GET `/templates/{template_id}/stats`
-  - 返回该模板的统计数据
-
-- POST `/templates/{template_id}/stats/{kind}`
-  - `kind` ∈ {`preview`, `edit`, `export`}
-  - 递增统计并记录到 `operation_logs`
-
-- POST `/projects`
-  - Content-Type: `multipart/form-data`
-  - 字段：`projectId`(必填), `templateId`(必填), `projectName`(可选，默认 "项目")
-  - 行为：将 `backend/templates/{template_files_path}` 复制到 `backend/projects/{templateName}-{projectId}`，并在 `projects` 表落库（若不存在）
-
-- POST `/projects/{project_id}/assets`
-  - Content-Type: `multipart/form-data`
-  - 字段：`file`(必填), `category`(可选，默认 `images`), `filename`(可选；默认使用上传文件名)
-  - 保存到：`backend/projects/uploads/{project_id}/{category}/{filename}`
+- 项目（Projects）
+  - GET `/projects`
+    - 项目列表
+  - GET `/projects/{project_id}`
+    - 项目详情
+  - POST `/projects`
+    - Content-Type: `multipart/form-data`
+    - 字段：`projectId`(必填, string), `templateId`(必填, int), `projectName`(可选，默认 "项目")
+    - 行为：将 `backend/templates/{template_name}` 复制到 `backend/projects/{templateId}-{projectId}`，并在 `projects` 表创建（若不存在）
+  - GET `/projects/{project_id}/status`
+    - 查询项目状态，`status` ∈ {`draft`, `preview_ready`, `exported`}
+  - POST `/projects/{project_id}/status/{status}`
+    - 更新项目状态；`status` 必须为 {`draft`, `preview_ready`, `exported`} 之一
+  - POST `/projects/{project_id}/assets`
+    - Content-Type: `multipart/form-data`
+    - 字段：`file`(必填), `category`(可选，默认 `images`), `filename`(必填；服务器按该文件名保存)
+    - 保存到：`backend/projects/{templateId}-{projectId}/uploads/{category}/{filename}`；上传成功后项目状态置为 `preview_ready`
+  - POST `/projects/{project_id}/export`
+    - 生成导出 ZIP（要求项目状态为 `preview_ready`），并返回 `downloadUrl`
+  - GET `/projects/{project_id}/download`
+    - 下载导出生成的 ZIP 文件
 
 跨域：已允许所有来源（开发阶段方便前端联调）。
 
 ## Smoke Tests
 ```
+# 健康检查
 curl -s http://localhost:8000/health
-curl -s http://localhost:8000/templates | jq .[0]
-TID=tpl_puzzle_001
+
+# 模板列表与选择一个模板ID（整数）
+TID=$(curl -s http://localhost:8000/templates | jq '.[0].templateId')
+echo "TID=${TID}"
+
+# 模板详情与统计
 curl -s http://localhost:8000/templates/$TID | jq .templateName
 curl -s http://localhost:8000/templates/$TID/stats | jq .
 curl -s -X POST http://localhost:8000/templates/$TID/stats/preview
-curl -s -X POST -F projectId=p_123 -F templateId=$TID -F projectName=test http://localhost:8000/projects
+
+# 创建项目
+PID=p_123
+curl -s -X POST -F projectId=$PID -F templateId=$TID -F projectName=test http://localhost:8000/projects
+
+# 查看项目状态（应为 draft）
+curl -s http://localhost:8000/projects/$PID/status | jq .
+
+# 上传一个素材（示例使用仓库中的示例图片）后，项目状态会变为 preview_ready
+curl -s -X POST \
+  -F file=@backend/templates/image-puzzle/assets/images/background.webp \
+  -F category=images \
+  -F filename=background.webp \
+  http://localhost:8000/projects/$PID/assets
+
+# 确认项目状态为 preview_ready
+curl -s http://localhost:8000/projects/$PID/status | jq .
+
+# 生成导出 ZIP，并获取下载地址
+curl -s -X POST http://localhost:8000/projects/$PID/export | jq .
+
+# 下载导出 ZIP（可选）
+curl -s -L -o backend/exports/${PID}.zip http://localhost:8000/projects/$PID/download
 ```

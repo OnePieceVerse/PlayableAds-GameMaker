@@ -4,12 +4,17 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { headers } from "next/headers";
 
 
 async function fetchTemplates(q?: string, cat?: string) {
   // Fetch from backend
   type Item = { templateId: string; templateName: string; description: string; thumbnailUrl: string; category?: string };
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/templates`, { cache: "no-store" });
+  const h = headers();
+  const host = h.get("host") || "localhost:3000";
+  const proto = h.get("x-forwarded-proto") || "http";
+  const base = `${proto}://${host}`;
+  const res = await fetch(`${base}/api/templates`, { cache: "no-store" });
   let templates: Item[] = (await res.json()).data;
   if (q) templates = templates.filter((t) => t.templateName.includes(q) || t.description.includes(q));
   if (cat && cat !== "全部") templates = templates.filter((t) => (t.category || "通用") === cat);

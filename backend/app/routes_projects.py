@@ -96,3 +96,26 @@ async def get_project_status(project_id: str):
         if not p:
             raise HTTPException(404, "Project not found")
         return {"status": p.status}
+
+
+@router.post("/{project_id}/assets")
+async def upload_asset(project_id: str, file: UploadFile = File(...), category: str = Form("images"), filename: str = Form(None)):
+    # print(f"upload_asset: {project_id}, {file}, {category}, {filename}")
+    with get_session() as s:
+        p = s.get(Projects, project_id)
+        if not p:
+            raise HTTPException(404, "Project not found")
+        # if p.status != "draft":
+        #     raise HTTPException(400, "Project is not in draft status")
+        dst = PROJECTS_ROOT / f"{p.template_id}-{project_id}" / "assets" / category / filename
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        with dst.open("wb") as f:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
+
+        p.status = "preview_ready"
+        s.commit()
+        return {"ok": True}

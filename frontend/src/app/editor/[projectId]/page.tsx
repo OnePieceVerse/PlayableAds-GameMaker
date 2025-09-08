@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 
 import { toast } from "sonner";
 import { TemplateDetail } from "@/types";
-import { API_BASE } from "@/lib/api";
+// import { API_BASE } from "@/lib/api";
 import { validateFileAgainstAsset } from "@/lib/validation";
 
 async function fetchTemplate(id: string): Promise<TemplateDetail> {
@@ -37,19 +37,23 @@ export default function EditorPage() {
     fetchTemplate(templateId).then(setTpl).catch(() => toast.error("加载模板失败"));
   }, [templateId]);
 
-  const orderedAssets = useMemo(() => {
-    return (tpl?.assets || []).slice().sort((a, b) => a.displayOrder - b.displayOrder);
+  type AssetForEditor = TemplateDetail["assets"][number] & { assetUrl?: string; assetFileName?: string; };
+  const assetsForEditor = useMemo(() => {
+    return (tpl?.assets || []).map((a: AssetForEditor) => ({
+      ...a,
+      assetUrl: `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/templates-static/${tpl?.templateName}/assets/${a.assetType}s/${a.assetFileName}`,
+    }));
   }, [tpl]);
 
   const groupedAssets = useMemo(() => {
     type GroupKey = "图片" | "Gif" | "音频" | "视频";
-    const groups: Record<GroupKey, TemplateDetail["assets"]> = {
+    const groups: Record<GroupKey, typeof assetsForEditor> = {
       图片: [],
       Gif: [],
       音频: [],
       视频: [],
     };
-    for (const a of orderedAssets) {
+    for (const a of assetsForEditor) {
       if (a.assetType === "image") {
         const isGif = a.allowedFormats?.some((f) => f.toLowerCase() === "gif");
         (isGif ? groups["Gif"] : groups["图片"]).push(a);
@@ -60,11 +64,18 @@ export default function EditorPage() {
       }
     }
     return groups;
-  }, [orderedAssets]);
+  }, [assetsForEditor]);
 
   async function onFileChange(defId: string, def: TemplateDetail["assets"][number], f?: File) {
     if (!f) return;
-    const { isAllowedFormat, isSizeOk, isDimensionOk } = await validateFileAgainstAsset(f, def);
+    const { isAllowedFormat, isSizeOk, isDimensionOk, isDurationOk } = await validateFileAgainstAsset(f, {
+      allowedFormats: def.allowedFormats,
+      maxFileSizeKb: (def as { maxFileSizeKb?: number }).maxFileSizeKb || 0,
+      assetType: def.assetType,
+      requiredWidth: def.requiredWidth,
+      requiredHeight: def.requiredHeight,
+      maxDurationSec: (def as { maxDurationSec?: number }).maxDurationSec,
+    });
     if (!isAllowedFormat) {
       setValidation((v) => ({ ...v, [defId]: { status: "invalid", msg: "格式不符合" } }));
       return toast.error("格式不符合");
@@ -76,6 +87,16 @@ export default function EditorPage() {
     if (isDimensionOk === false) {
       setValidation((v) => ({ ...v, [defId]: { status: "invalid", msg: "尺寸不符合" } }));
       return toast.error("尺寸不符合");
+    }
+    if (isDurationOk === false) {
+      setValidation((v) => ({ ...v, [defId]: { status: "invalid", msg: "时长不符合" } }));
+      return toast.error("时长不符合");
+    }
+    // 文件名检查：需与模板定义的文件名一致（仅比较文件名，不含路径）
+    const expected = (def as { assetFileName?: string }).assetFileName ? String((def as { assetFileName?: string }).assetFileName).split("/").pop() : undefined;
+    if (expected && f.name !== expected) {
+      setValidation((v) => ({ ...v, [defId]: { status: "invalid", msg: `文件名需为 ${expected}` } }));
+      return toast.error(`文件名需为 ${expected}`);
     }
     setFiles((fs) => ({ ...fs, [defId]: f }));
     const url = URL.createObjectURL(f);
@@ -89,13 +110,22 @@ export default function EditorPage() {
     // 素材均可不替换，直接进入预览
     // Upload chosen files before navigate
     try {
+      // ensure project exists before upload
+      const fdCreate = new FormData();
+      fdCreate.set("projectId", params.projectId);
+      fdCreate.set("templateId", String(tpl.templateId));
+      fdCreate.set("projectName", projectName);
+      await fetch(`/api/projects`, { method: "POST", body: fdCreate });
+
       for (const [defId, f] of Object.entries(files)) {
         if (!f) continue;
-        const cat = (tpl.assets.find((a) => a.assetDefId === defId)?.assetType || "image") + "s";
+        const cat = (tpl.assets.find((a) => a.assetId === defId)?.assetType || "image") + "s";
         const fd = new FormData();
         fd.set("file", f as File);
         fd.set("category", cat);
-        fd.set("filename", f.name);
+        const expected = (tpl.assets.find((a) => a.assetId === defId) as { assetFileName?: string } | undefined)?.assetFileName;
+        const saveName = expected ? String(expected).split("/").pop() : f.name;
+        fd.set("filename", saveName || f.name);
         await fetch(`/api/projects/${params.projectId}/assets`, { method: "POST", body: fd });
       }
     } catch {}
@@ -105,12 +135,7 @@ export default function EditorPage() {
     url.pathname = `/editor/${params.projectId}/preview`;
     // Forward via Next API routes
     fetch(`/api/templates/${tpl.templateId}/stats/preview`, { method: "POST" }).catch(() => {});
-    // Ensure project persisted via Next API route
-    const fd = new FormData();
-    fd.set("projectId", params.projectId);
-    fd.set("templateId", tpl.templateId);
-    fd.set("projectName", projectName);
-    fetch(`/api/projects`, { method: "POST", body: fd }).catch(()=>{});
+    // project already ensured above
     window.location.href = `${url.pathname}?templateId=${tpl.templateId}&name=${encodeURIComponent(projectName)}`;
   }
 
@@ -133,17 +158,18 @@ export default function EditorPage() {
                 <div className="text-sm font-medium text-muted-foreground">{label}</div>
                 <div className="divide-y rounded-md border bg-background">
                   {groupedAssets[label].map((a) => (
-                    <div key={a.assetDefId} className="grid grid-cols-[1fr_80px_1fr] items-start gap-4 p-3">
+                    <div key={a.assetId} className="grid grid-cols-[1fr_80px_1fr] items-start gap-4 p-3">
                       {/* 左侧：原始素材信息组件 */}
                       <AssetOriginalInfo
                         assetName={a.assetName}
                         assetKey={a.assetKey}
                         assetType={a.assetType}
                         allowedFormats={a.allowedFormats}
-                        maxFileSizeMb={a.maxFileSizeMb}
+                        maxFileSizeKb={a.maxFileSizeKb}
                         requiredWidth={a.requiredWidth}
                         requiredHeight={a.requiredHeight}
-                        placeholderUrl={a.placeholderUrl}
+                        assetUrl={a.assetUrl}
+                        maxDurationSec={a.maxDurationSec}
                       />
 
                       {/* 中间文案 */}
@@ -154,8 +180,8 @@ export default function EditorPage() {
                         <div className="mt-0 flex items-start gap-3">
                           {a.assetType === "image" ? (
                             <div className="relative w-[220px] aspect-[3/2] rounded-md overflow-hidden border bg-muted">
-                              {previews[a.assetDefId] ? (
-                                <Image src={previews[a.assetDefId] as string} alt={`${a.assetName}-新`} fill className="object-cover" />
+                              {previews[a.assetId] ? (
+                                <Image src={previews[a.assetId] as string} alt={`${a.assetName}-新`} fill className="object-cover" />
                               ) : (
                                 <div className="w-full h-full grid place-items-center text-xs text-muted-foreground">未上传</div>
                               )}
@@ -164,17 +190,13 @@ export default function EditorPage() {
                             <div className="w-[220px] h-[120px] rounded-md border bg-muted/50 grid place-items-center text-xs text-muted-foreground">未上传</div>
                           )}
                           <div className="grid gap-2">
-                            <Label htmlFor={`f_${a.assetDefId}`}>上传新素材</Label>
+                            <Label htmlFor={`f_${a.assetId}`}>上传新素材</Label>
                             <Input
-                              id={`f_${a.assetDefId}`}
+                              id={`f_${a.assetId}`}
                               type="file"
                               accept={a.allowedFormats.map((e: string) => `.${e}`).join(",")}
-                              onChange={(e) => onFileChange(a.assetDefId, a, e.target.files?.[0])}
+                              onChange={(e) => onFileChange(a.assetId, a, e.target.files?.[0])}
                             />
-                            <div className="text-xs text-muted-foreground">
-                              状态: {validation[a.assetDefId]?.status || "pending"}
-                              {validation[a.assetDefId]?.msg ? ` · ${validation[a.assetDefId]?.msg}` : ""}
-                            </div>
                           </div>
                         </div>
                       </div>

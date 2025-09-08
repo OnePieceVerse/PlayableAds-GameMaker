@@ -1,8 +1,6 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -13,10 +11,20 @@ export default function ExportPage() {
   const name = sp.get("name") || "我的项目";
 
   async function exportZip() {
-    const zip = new JSZip();
-    zip.file("README.txt", `Template: ${templateId}\nProject: ${name}`);
-    const blob = await zip.generateAsync({ type: "blob" });
-    saveAs(blob, `${params.projectId}.zip`);
+    // trigger backend export, then download through Next proxy
+    const expRes = await fetch(`/api/projects/${params.projectId}/export`, { method: "POST" });
+    if (!expRes.ok) return;
+    const dl = await fetch(`/api/projects/${params.projectId}/download`);
+    if (!dl.ok) return;
+    const blob = await dl.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${params.projectId}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   return (

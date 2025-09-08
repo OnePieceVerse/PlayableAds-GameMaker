@@ -41,6 +41,7 @@ class TemplateAssets(Base):
     max_file_size_kb: Mapped[float]
     required_width: Mapped[int | None]
     required_height: Mapped[int | None]
+    max_duration_sec: Mapped[int | None]
     is_required: Mapped[bool] = mapped_column(Boolean, default=True)
 
 class Projects(Base):

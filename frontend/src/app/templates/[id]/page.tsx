@@ -1,8 +1,5 @@
-import Image from "next/image";
 import { AssetOriginalInfo } from "@/components/asset-original-info";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { StartCustomizationButton } from "@/components/start-customization-button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -16,12 +13,26 @@ type TemplateDetailDto = {
   category?: string;
   description: string;
   thumbnailUrl: string;
-  assets: any[];
+  tags: string[];
+  assets: BackendAsset[];
+};
+
+type BackendAsset = {
+  assetId: string;
+  assetName: string;
+  assetType: "image" | "audio" | "video";
+  assetFileName: string;
+  allowedFormats: string[];
+  maxFileSizeKb: number;
+  requiredWidth?: number;
+  requiredHeight?: number;
+  maxDurationSec?: number;
+  isRequired: boolean;
 };
 
 async function getTemplate(id: string): Promise<TemplateDetailDto> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/templates/${id}`, { cache: "no-store" });
-  return (await res.json()).data;
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/templates/${id}`, { cache: "no-store" });
+  return (await res.json()) as TemplateDetailDto;
 }
 
 export default async function TemplateDetailPage({
@@ -35,9 +46,13 @@ export default async function TemplateDetailPage({
   if (!data) return notFound();
 
   function groupAssets() {
-    if (!data) return { 图片: [], Gif: [], 音频: [], 视频: [] } as Record<string, any[]>;
-    const groups: Record<string, any[]> = { 图片: [], Gif: [], 音频: [], 视频: [] };
-    for (const a of data.assets.slice().sort((x: any, y: any) => x.displayOrder - y.displayOrder)) {
+    if (!data) return { 图片: [], Gif: [], 音频: [], 视频: [] } as Record<string, ViewAsset[]>;
+    const transformed: ViewAsset[] = data.assets.map((a) => ({
+      ...a,
+      assetUrl: `${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/templates-static/${data.templateName}/assets/${a.assetType}s/${a.assetFileName}`,
+    }));
+    const groups: Record<string, ViewAsset[]> = { 图片: [], Gif: [], 音频: [], 视频: [] };
+    for (const a of transformed) {
       if (a.assetType === "image") {
         const isGif = a.allowedFormats?.some((f: string) => f.toLowerCase() === "gif");
         (isGif ? groups["Gif"] : groups["图片"]).push(a);
@@ -50,6 +65,8 @@ export default async function TemplateDetailPage({
     return groups;
   }
 
+type ViewAsset = BackendAsset & { assetUrl: string };
+
   const grouped = groupAssets();
 
   return (
@@ -58,7 +75,7 @@ export default async function TemplateDetailPage({
         <IncrementStat templateId={data.templateId} kind="preview" />
         <DeviceFrame>
           <iframe
-            src={`/templates/${data.templateId}/index.html`}
+            src={`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/templates-static/${data.templateName}/index.html`}
             title={data.templateName}
             className="w-full h-full bg-white"
           />
@@ -84,13 +101,11 @@ export default async function TemplateDetailPage({
         </div>
 
         <div className="text-sm leading-7 text-muted-foreground">
-          {data.templateName} 是本平台提供的模板之一，可自定义图片/文案/音乐/互动参数，一键生成 H5 活动。玩法简介：{data.description}
+          {data.description}
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {[data.category, "游戏", "活动", "教育", "培训", "老师"]
-            .filter(Boolean)
-            .map((t, i) => (
+          {data.tags.map((t, i) => (
               <Badge key={`${t}-${i}`} variant="secondary">
                 {t}
               </Badge>
@@ -106,17 +121,18 @@ export default async function TemplateDetailPage({
               <div key={label} className="space-y-2">
                 <div className="text-sm font-medium text-muted-foreground">{label}</div>
                 <div className="divide-y rounded-md border bg-background">
-                  {grouped[label].map((a: any) => (
-                    <div key={a.assetDefId} className="p-3">
+                  {grouped[label].map((a) => (
+                    <div key={a.assetId} className="p-3">
                       <AssetOriginalInfo
                         assetName={a.assetName}
-                        assetKey={a.assetKey}
+                        assetKey={a.assetFileName}
                         assetType={a.assetType}
                         allowedFormats={a.allowedFormats}
-                        maxFileSizeMb={a.maxFileSizeMb}
+                        maxFileSizeKb={a.maxFileSizeKb}
                         requiredWidth={a.requiredWidth}
                         requiredHeight={a.requiredHeight}
-                        placeholderUrl={a.placeholderUrl}
+                        assetUrl={a.assetUrl}
+                        maxDurationSec={a.maxDurationSec}
                       />
                     </div>
                   ))}

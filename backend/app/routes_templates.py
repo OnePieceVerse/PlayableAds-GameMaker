@@ -61,6 +61,7 @@ async def get_template(template_id: int):
                     "maxFileSizeKb": a.max_file_size_kb,
                     "requiredWidth": a.required_width,
                     "requiredHeight": a.required_height,
+                    "maxDurationSec": a.max_duration_sec,
                     "isRequired": a.is_required,
                 }
                 for a in assets

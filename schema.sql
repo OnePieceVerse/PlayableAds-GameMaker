@@ -46,6 +46,7 @@ CREATE TABLE template_assets (
     max_file_size_kb DECIMAL(10,2) NOT NULL COMMENT '最大文件大小(KB)',
     required_width INT COMMENT '要求宽度(像素)',
     required_height INT COMMENT '要求高度(像素)',
+    max_duration_sec INT COMMENT '音频时最大时长(秒)',
     is_required BOOLEAN DEFAULT TRUE COMMENT '是否必需',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

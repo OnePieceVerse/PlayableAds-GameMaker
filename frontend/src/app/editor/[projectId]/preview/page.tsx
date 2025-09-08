@@ -13,7 +13,11 @@ export default function PreviewPage() {
   return (
     <div className="space-y-4">
       <DeviceFrame>
-        <iframe src={`/templates/${templateId}/index.html`} title="预览" className="w-full h-full bg-white" />
+        <iframe
+          src={`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/projects-static/${templateId}-${params.projectId}/index.html`}
+          title="预览"
+          className="w-full h-full bg-white"
+        />
       </DeviceFrame>
       <div className="flex gap-3">
         <Button asChild variant="secondary">

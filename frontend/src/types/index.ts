@@ -1,18 +1,18 @@
 export type AssetType = "image" | "audio" | "video";
 
 export interface TemplateAssetDef {
-  assetDefId: string;
+  assetId: string;
   assetKey: string;
   assetName: string;
   assetType: AssetType;
   allowedFormats: string[];
-  maxFileSizeMb: number;
+  maxFileSizeKb: number;
   requiredWidth?: number;
   requiredHeight?: number;
   allowResize?: boolean;
-  placeholderUrl: string;
+  assetUrl: string;
+  maxDurationSec?: number;
   isRequired: boolean;
-  displayOrder: number;
 }
 
 export interface TemplateAnalytics {
@@ -34,7 +34,7 @@ export interface TemplateDetail extends TemplateItem {
 }
 
 export interface ProjectStateAsset {
-  assetDefId: string;
+  assetId: string;
   file?: File;
   previewUrl?: string;
   validationStatus: "pending" | "valid" | "invalid";
@@ -45,7 +45,7 @@ export interface EditorProjectState {
   projectId: string;
   templateId: string;
   projectName: string;
-  assets: Record<string, ProjectStateAsset>; // key by assetDefId
+  assets: Record<string, ProjectStateAsset>; // key by assetId
   previewGenerated: boolean;
   previewCount: number;
   exportCount: number;

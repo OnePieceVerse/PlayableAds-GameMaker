@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 import os
+from pathlib import Path
 
 from .routes_templates import router as templates_router
 from .routes_projects import router as projects_router
@@ -38,3 +40,13 @@ async def health():
 
 app.include_router(templates_router)
 app.include_router(projects_router)
+
+# Static mounts for templates and projects
+BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+PROJECTS_DIR = BASE_DIR / "projects"
+TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
+PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
+
+app.mount("/templates-static", StaticFiles(directory=str(TEMPLATES_DIR)), name="templates-static")
+app.mount("/projects-static", StaticFiles(directory=str(PROJECTS_DIR)), name="projects-static")
