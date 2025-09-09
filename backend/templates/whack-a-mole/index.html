@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Whack-a-Mole 打地鼠</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-bg" id="pageBg"></div>
+    <div class="app">
+      <div class="hud" aria-live="polite">
+        <div class="score" aria-label="分数"><span id="scoreText">0</span></div>
+        <div class="timer" aria-label="倒计时"><span id="timerText">15</span></div>
+      </div>
+
+      <main id="game" class="game" role="main" aria-label="打地鼠">
+        <section id="board" class="board" aria-label="地洞区域">
+          <img id="hammer" class="hammer" alt="hammer" />
+        </section>
+        <footer class="help">点击冒出的地鼠得分！在限定时间内达到目标分数。</footer>
+      </main>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./main.js"></script>
+  </body>
+  </html>
+
+
