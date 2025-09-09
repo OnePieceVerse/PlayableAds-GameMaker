@@ -14,6 +14,9 @@ export default function ExportPage() {
     // trigger backend export, then download through Next proxy
     const expRes = await fetch(`/api/projects/${params.projectId}/export`, { method: "POST" });
     if (!expRes.ok) return;
+    if (templateId) {
+      fetch(`/api/templates/${templateId}/stats/export`, { method: "POST" }).catch(() => {});
+    }
     const dl = await fetch(`/api/projects/${params.projectId}/download`);
     if (!dl.ok) return;
     const blob = await dl.blob();

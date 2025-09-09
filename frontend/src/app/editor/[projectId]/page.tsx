@@ -135,8 +135,7 @@ export default function EditorPage() {
     const url = new URL(window.location.href);
     url.pathname = `/editor/${params.projectId}/preview`;
     // Forward via Next API routes
-    fetch(`/api/templates/${tpl.templateId}/stats/preview`, { method: "POST" }).catch(() => {});
-    // project already ensured above
+    // project already ensured aboves
     window.location.href = `${url.pathname}?templateId=${tpl.templateId}&name=${encodeURIComponent(projectName)}`;
   }
 
