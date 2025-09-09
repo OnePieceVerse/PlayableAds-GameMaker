@@ -152,7 +152,7 @@ export default function EditorPage() {
 
         <div className="space-y-4">
           <h2 className="font-medium">素材清单</h2>
-          <p className="text-xs text-muted-foreground">提示：每个素材均可不替换，系统将使用模板默认占位素材。</p>
+          <p className="text-xs text-muted-foreground">提示：素材替换均为可选，不替换时系统将使用模板默认素材。</p>
           {(["图片", "Gif", "音频", "视频"] as const).map((label) =>
             groupedAssets[label].length ? (
               <div key={label} className="space-y-2">

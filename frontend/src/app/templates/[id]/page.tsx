@@ -116,11 +116,26 @@ type ViewAsset = BackendAsset & { assetUrl: string };
 
         <div className="space-y-4">
           <h2 className="font-medium">素材清单与要求</h2>
+          <p className="text-xs text-muted-foreground">提示：素材替换均为可选，不替换时系统将使用模板默认素材。</p>
           {(["图片", "Gif", "音频", "视频"] as const).map((label) =>
             grouped[label].length ? (
-              <div key={label} className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">{label}</div>
-                <div className="divide-y rounded-md border bg-background">
+              <details key={label} className="group rounded-md border [&_summary::-webkit-details-marker]:hidden">
+                <summary className="cursor-pointer select-none flex items-center justify-between p-3 text-sm font-medium text-muted-foreground">
+                  <span>{label}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">{grouped[label].length} 项</span>
+                    <svg
+                      className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </summary>
+                <div className="divide-y border-t bg-background">
                   {grouped[label].map((a) => (
                     <div key={a.assetId} className="p-3">
                       <AssetOriginalInfo
@@ -137,7 +152,7 @@ type ViewAsset = BackendAsset & { assetUrl: string };
                     </div>
                   ))}
                 </div>
-              </div>
+              </details>
             ) : null
           )}
         </div>
