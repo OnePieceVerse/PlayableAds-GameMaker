@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Memory Pick 记忆益智</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-bg" id="pageBg"></div>
+    <div class="app">
+      <header class="title"></header>
+      <div class="hud" aria-live="polite">
+        <div class="timer" aria-label="倒计时"><span id="timerText">10s</span></div>
+        <div class="found" aria-label="已找到"><span id="foundText">0/3</span></div>
+      </div>
+
+      <main id="game" class="game" role="main" aria-label="记忆益智">
+        <section id="board" class="board" aria-label="九宫格"></section>
+        <section class="target-wrap" aria-label="目标图片">
+          <div id="targetImg" class="target-img"></div>
+          <div class="target-label">Target Image</div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./main.js"></script>
+  </body>
+  </html>
+
+
