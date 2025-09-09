@@ -83,7 +83,7 @@
         }
         if (audioCfg.sfxPlace) {
           sfxPlaceEl = new Audio(audioCfg.sfxPlace);
-          const vol = typeof audioCfg.sfxPlaceVolume === 'number' ? audioCfg.sfxPlaceVolume : audioCfg.sfxVolume;
+          const vol = audioCfg.sfxVolume;
           sfxPlaceEl.volume = clampVolume(vol, 1.0);
         }
       } catch (_e) { /* ignore */ }

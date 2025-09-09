@@ -18,11 +18,9 @@
       // Sound effects
       sfxSuccess: 'assets/audios/success.mp3',
       sfxFail: 'assets/audios/fail.mp3',
-      sfxVolume: 1.0,
       // Placement effect when putting a piece into a board slot
       sfxPlace: 'assets/audios/place.mp3',
-      // Optional override; falls back to sfxVolume
-      sfxPlaceVolume: 1.0
+      sfxVolume: 1.0,
     },
 
 
