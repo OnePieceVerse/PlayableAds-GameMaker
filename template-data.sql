@@ -15,7 +15,6 @@ INSERT INTO templates (
 
 SET @tpl_id = LAST_INSERT_ID();
 
-
 INSERT INTO template_assets (
   template_id, asset_name, asset_type, asset_file_name,
   allowed_formats, max_file_size_kb, required_width, required_height, max_duration_sec, is_required
@@ -60,3 +59,38 @@ INSERT INTO template_assets (
 (@tpl_id, '失败音效', 'audio', 'fail.mp3', JSON_ARRAY('mp3'), 50, NULL, NULL, 1, FALSE),
 (@tpl_id, '出现音效', 'audio', 'spawn.mp3', JSON_ARRAY('mp3'), 50, NULL, NULL, 1, FALSE);
 
+
+
+
+
+
+
+-- Template: memory-pick
+INSERT INTO templates (
+  template_name, template_title, template_category, template_gameplay,
+  template_desc, thumbnail_url, template_tags, is_active
+) VALUES (
+  'memory-pick',
+  'H5 记忆益智 - Memory Pick',
+  'puzzle',
+  '记忆目标图片并快速找出',
+  '快速记忆与反应的九宫格找图模板',
+  'https://banner2.cleanpng.com/20240125/tuj/transparent-colorful-background-creative-brain-image-in-vibrant-colors-and-1710907106178.webp',
+  JSON_ARRAY('记忆','益智'),
+  TRUE
+);
+
+SET @tpl_id = LAST_INSERT_ID();
+
+INSERT INTO template_assets (
+  template_id, asset_name, asset_type, asset_file_name,
+  allowed_formats, max_file_size_kb, required_width, required_height, max_duration_sec, is_required
+) VALUES
+(@tpl_id, '背景图片', 'image', 'background.jpg', JSON_ARRAY('jpg','png','webp'), 100, NULL, NULL, NULL, TRUE),
+(@tpl_id, '候选图片A', 'image', 'cat_a.svg', JSON_ARRAY('svg'), 100, NULL, NULL, NULL, TRUE),
+(@tpl_id, '候选图片B', 'image', 'cat_b.svg', JSON_ARRAY('svg'), 100, NULL, NULL, NULL, TRUE),
+(@tpl_id, '候选图片C', 'image', 'cat_c.svg', JSON_ARRAY('svg'), 100, NULL, NULL, NULL, TRUE),
+(@tpl_id, '背景音乐', 'audio', 'background.mp3', JSON_ARRAY('mp3'), 100, NULL, NULL, 20, FALSE),
+(@tpl_id, '成功音效', 'audio', 'success.mp3', JSON_ARRAY('mp3'), 50, NULL, NULL, 1, FALSE),
+(@tpl_id, '失败音效', 'audio', 'fail.mp3', JSON_ARRAY('mp3'), 50, NULL, NULL, 1, FALSE),
+(@tpl_id, '放置音效', 'audio', 'place.mp3', JSON_ARRAY('mp3'), 50, NULL, NULL, 1, FALSE);
