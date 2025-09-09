@@ -1,16 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
+// import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { headers } from "next/headers";
+import { Button } from "@/components/ui/button";
+import { Edit3, Eye, Download } from "lucide-react";
 
 
 async function fetchTemplates(q?: string, cat?: string) {
   // Fetch from backend
-  type Item = { templateId: string; templateName: string; description: string; thumbnailUrl: string; category?: string };
-  const h = headers();
+  type Item = {
+    templateId: string;
+    templateName: string;
+    description: string;
+    thumbnailUrl: string;
+    category?: string;
+    analytics?: { editCount?: number; previewCount?: number; exportCount?: number };
+  };
+  const h = await headers();
   const host = h.get("host") || "localhost:3000";
   const proto = h.get("x-forwarded-proto") || "http";
   const base = `${proto}://${host}`;
@@ -39,7 +48,7 @@ export default async function TemplatesPage({
         </form>
       </div>
       <div className="flex gap-2 flex-wrap">
-        {["全部", ...Array.from(new Set(templates.map((t: any) => t.category || "通用")))].map((c) => (
+        {["全部", ...Array.from(new Set(templates.map((t) => t.category || "通用")))].map((c) => (
           <Link key={c} href={{ pathname: "/templates", query: { q: q || "", cat: c } }}>
             <Badge variant={cat === c || (!cat && c === "全部") ? "default" : "secondary"}>{c}</Badge>
           </Link>
@@ -47,20 +56,46 @@ export default async function TemplatesPage({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-        {templates.map((t) => (
-          <Link key={t.templateId} href={`/templates/${t.templateId}`}>
-            <Card className="h-full overflow-hidden">
-              <div className="relative aspect-video">
-                <Image src={t.thumbnailUrl} alt={t.templateName} fill className="object-cover" />
+        {templates.map((t, i) => (
+          <Card key={t.templateId} className="h-full overflow-hidden group gap-0 py-0">
+            <div className="relative aspect-video">
+              <Image
+                src={t.thumbnailUrl}
+                alt={t.templateName}
+                fill
+                priority={i === 0}
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:opacity-100 group-hover:bg-black/40 transition-all">
+                <Button asChild size="sm">
+                  <Link href={`/templates/${t.templateId}`}>预览试玩</Link>
+                </Button>
               </div>
-              <CardHeader className="p-4 pb-0">
-                <CardTitle className="text-base font-medium truncate">{t.templateName}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-2 text-sm text-muted-foreground line-clamp-2">
-                {t.description}
-              </CardContent>
-            </Card>
-          </Link>
+            </div>
+            <CardHeader className="p-2 pb-0">
+              <CardTitle className="text-base font-medium truncate">{t.templateName}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 pt-2 text-sm text-muted-foreground line-clamp-2">
+              {t.description}
+            </CardContent>
+            <CardFooter className="p-2 pt-0 pb-2 flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <span className="inline-flex items-center gap-1.5">
+                  <Edit3 className="size-4" aria-hidden="true" />
+                  <span>{t.analytics?.editCount ?? 0}</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Eye className="size-4" aria-hidden="true" />
+                  <span>{t.analytics?.previewCount ?? 0}</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Download className="size-4" aria-hidden="true" />
+                  <span>{t.analytics?.exportCount ?? 0}</span>
+                </span>
+              </div>
+            </CardFooter>
+          </Card>
         ))}
       </div>
     </div>

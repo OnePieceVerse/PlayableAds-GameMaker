@@ -13,7 +13,7 @@ export const MOCK_TEMPLATES: TemplateDetail[] = [
     description: "简洁的拼图小游戏模板，适合品牌露出。",
     thumbnailUrl: img("puzzle_001"),
     category: "益智",
-    analytics: { previewCount: 123, exportCount: 45 },
+    analytics: { editCount: 0, previewCount: 123, exportCount: 45 },
     assets: [
       {
         assetId: "bg",
@@ -62,7 +62,7 @@ export const MOCK_TEMPLATES: TemplateDetail[] = [
     description: "轻量级记忆翻牌游戏，玩法简单。",
     thumbnailUrl: img("memory_001"),
     category: "益智",
-    analytics: { previewCount: 88, exportCount: 21 },
+    analytics: { editCount: 0, previewCount: 88, exportCount: 21 },
     assets: [
       {
         assetId: "bg",
@@ -88,7 +88,7 @@ export const MOCK_TEMPLATES: TemplateDetail[] = [
       description: "用于活动促销的互动模板。",
       thumbnailUrl: img(id),
       category: categories[(i % categories.length) as number],
-      analytics: { previewCount: Math.floor(Math.random() * 200), exportCount: Math.floor(Math.random() * 60) },
+      analytics: { editCount: Math.floor(Math.random() * 100), previewCount: Math.floor(Math.random() * 200), exportCount: Math.floor(Math.random() * 60) },
       assets: [
         {
           assetId: "bg",

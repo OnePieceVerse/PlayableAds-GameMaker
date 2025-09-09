@@ -49,7 +49,13 @@ export function AssetOriginalInfo(props: AssetOriginalInfoProps) {
       {assetType === "image" ? (
         <div className="relative w-[220px] aspect-[3/2] rounded-md overflow-hidden border bg-muted">
           {assetUrl ? (
-            <Image src={assetUrl} alt={`${assetName}-原始`} fill className="object-cover" />
+            <Image
+              src={assetUrl}
+              alt={`${assetName}-原始`}
+              fill
+              sizes="220px"
+              className="object-cover"
+            />
           ) : (
             <div className="w-full h-full grid place-items-center text-xs text-muted-foreground">原始</div>
           )}

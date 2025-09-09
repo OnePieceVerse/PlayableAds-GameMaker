@@ -68,6 +68,13 @@ export default function EditorPage() {
 
   async function onFileChange(defId: string, def: TemplateDetail["assets"][number], f?: File) {
     if (!f) return;
+    // 文件名检查：需与模板定义的文件名一致（仅比较文件名，不含路径）
+    const expected = (def as { assetFileName?: string }).assetFileName ? String((def as { assetFileName?: string }).assetFileName).split("/").pop() : undefined;
+    if (expected && f.name !== expected) {
+      setValidation((v) => ({ ...v, [defId]: { status: "invalid", msg: `文件名需为 ${expected}` } }));
+      return toast.error(`文件名需为 ${expected}`);
+    }
+
     const { isAllowedFormat, isSizeOk, isDimensionOk, isDurationOk } = await validateFileAgainstAsset(f, {
       allowedFormats: def.allowedFormats,
       maxFileSizeKb: (def as { maxFileSizeKb?: number }).maxFileSizeKb || 0,
@@ -91,12 +98,6 @@ export default function EditorPage() {
     if (isDurationOk === false) {
       setValidation((v) => ({ ...v, [defId]: { status: "invalid", msg: "时长不符合" } }));
       return toast.error("时长不符合");
-    }
-    // 文件名检查：需与模板定义的文件名一致（仅比较文件名，不含路径）
-    const expected = (def as { assetFileName?: string }).assetFileName ? String((def as { assetFileName?: string }).assetFileName).split("/").pop() : undefined;
-    if (expected && f.name !== expected) {
-      setValidation((v) => ({ ...v, [defId]: { status: "invalid", msg: `文件名需为 ${expected}` } }));
-      return toast.error(`文件名需为 ${expected}`);
     }
     setFiles((fs) => ({ ...fs, [defId]: f }));
     const url = URL.createObjectURL(f);

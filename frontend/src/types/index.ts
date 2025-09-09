@@ -1,6 +1,6 @@
 export type AssetType = "image" | "audio" | "video";
 
-export interface TemplateAssetDef {
+export interface TemplateAsset {
   assetId: string;
   assetKey: string;
   assetName: string;
@@ -16,6 +16,7 @@ export interface TemplateAssetDef {
 }
 
 export interface TemplateAnalytics {
+  editCount: number;
   previewCount: number;
   exportCount: number;
 }
@@ -30,7 +31,7 @@ export interface TemplateItem {
 }
 
 export interface TemplateDetail extends TemplateItem {
-  assets: TemplateAssetDef[];
+  assets: TemplateAsset[];
 }
 
 export interface ProjectStateAsset {
@@ -47,6 +48,7 @@ export interface EditorProjectState {
   projectName: string;
   assets: Record<string, ProjectStateAsset>; // key by assetId
   previewGenerated: boolean;
+  editCount: number;
   previewCount: number;
   exportCount: number;
 }
