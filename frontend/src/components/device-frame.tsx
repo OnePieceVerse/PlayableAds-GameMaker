@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { RotateCw } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Orientation = "vertical" | "horizontal";
@@ -26,6 +27,7 @@ export function DeviceFrame({
   const [containerSize, setContainerSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const screenContentRef = useRef<HTMLDivElement | null>(null);
   const [landscapeIframeHeight, setLandscapeIframeHeight] = useState<number>(423);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   // Enforce portrait-only preview
   useEffect(() => {
@@ -71,11 +73,12 @@ export function DeviceFrame({
     if (React.isValidElement(children)) {
       const extraStyle = orientation === "horizontal" ? { height: `${landscapeIframeHeight}px`, width: "100%" } : {};
       return React.cloneElement(children as any, {
+        key: refreshTick,
         style: { ...(children as any).props?.style, ...extraStyle },
       });
     }
     return children;
-  }, [children, orientation, landscapeIframeHeight]);
+  }, [children, orientation, landscapeIframeHeight, refreshTick]);
 
   useEffect(() => {
     if (!screenContentRef.current) return;
@@ -116,6 +119,14 @@ export function DeviceFrame({
                 className="rounded-md px-2 py-1 text-sm opacity-40 cursor-not-allowed"
               >
                 横屏
+              </button>
+              <button
+                type="button"
+                aria-label="刷新"
+                onClick={() => setRefreshTick((v) => v + 1)}
+                className="rounded-md mt-8 px-2 py-1 text-sm opacity-90 hover:opacity-100 inline-flex items-center gap-1.5"
+              >
+                <RotateCw className="size-8" aria-hidden="true" />
               </button>
             </div>
           </aside>
