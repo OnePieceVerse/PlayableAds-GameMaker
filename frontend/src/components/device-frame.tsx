@@ -49,7 +49,7 @@ export function DeviceFrame({
     const isPortrait = orientation === "vertical";
     const screen = isPortrait ? { w: 423, h: 762 } : { w: 762, h: 423 };
     const p = isPortrait
-      ? { top: 0.10, bottom: 0.08, left: 0.065, right: 0.065 }
+      ? { top: 0.10, bottom: 0.07, left: 0.065, right: 0.065 }
       : { top: 0.08, bottom: 0.08, left: 0.08, right: 0.08 };
     const frameUrl = isPortrait ? PHONE_VERTICAL_URL : PHONE_HORIZONTAL_URL;
     const dw = screen.w;
