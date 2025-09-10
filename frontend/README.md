@@ -16,7 +16,7 @@ NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run build
 ```
 
 ### 使用 PM2 启动
-使用 `ecosystem.config.js`（推荐，便于统一管理与开机自启）， 在 frontend 目录下创建：
+在 frontend 目录下创建 `ecosystem.config.js`（推荐，便于统一管理与开机自启）， ：
 
 ```js
 module.exports = {
