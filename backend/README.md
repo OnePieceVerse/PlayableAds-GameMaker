@@ -48,13 +48,14 @@ export DB_PASSWORD=password
 export DB_NAME=playableads_gamemaker
 ```
 
-也可在 `backend/` 目录下创建 `.env` 文件，内容同上。
+也可在 `backend/` 目录下创建 `.env` 文件，内容同上，但请不要提交到仓库。
 
 ## 安装与运行
 使用 uv（推荐）：
 ```
 cd backend
 uv sync
+source .venv/bin/activate
 uv run -m app
 ```
 服务启动后访问: http://localhost:8000

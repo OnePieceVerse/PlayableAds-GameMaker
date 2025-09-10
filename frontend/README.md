@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 生产部署（PM2 + Nginx）
 
-## Getting Started
+### 前置要求
 
-First, run the development server:
+- Node.js ≥ 20（推荐 20 LTS）
+- 全局安装 PM2：`npm i -g pm2`
+- 服务器已安装并启用 Nginx
+- 确认后端地址用于 `NEXT_PUBLIC_API_BASE`
+
+### 构建
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd frontend
+npm ci
+NEXT_PUBLIC_API_BASE=https://api.example.com npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 使用 PM2 启动
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# 假设占用端口 18880，如需更换端口请同步修改 Nginx 配置
+pm2 start npm --name "playable-frontend" -- start -- -p 18880
+pm2 save
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 配置 Nginx（反向代理到 127.0.0.1:18880）
 
-## Learn More
+```nginx
+server {
+  listen 80;
+  server_name example.com;
 
-To learn more about Next.js, take a look at the following resources:
+  location / {
+    proxy_pass http://127.0.0.1:18880;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+应用配置：
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
 
-## Deploy on Vercel
+### 更新流程（零停机）
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+cd frontend
+git pull
+npm ci
+NEXT_PUBLIC_API_BASE=https://api.example.com npm run build
+pm2 reload playable-frontend
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 备注
+
+- 变更 `NEXT_PUBLIC_API_BASE` 需重新构建后再 `pm2 reload`
+- 若更换端口，需同时更新 Nginx 的 `proxy_pass`
