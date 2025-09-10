@@ -25,7 +25,7 @@ module.exports = {
       name: "playableall-game-maker-frontend",
       cwd: __dirname,
       script: "node_modules/next/dist/bin/next",
-      args: "start -p 18880",
+      args: "start -p 3000",
       instances: 1,
       exec_mode: "fork",
       env: {
@@ -51,15 +51,15 @@ pm2 save
 pm2 startup  # 按提示执行命令配置系统开机自启
 ```
 
-### 配置 Nginx（反向代理到 127.0.0.1:18880）
+### 配置 Nginx（反向代理到 127.0.0.1:3000）
 
 ```nginx
 server {
-  listen 8080;
+  listen 80;
   server_name playableall-game.woa.com;
 
   location / {
-    proxy_pass http://127.0.0.1:18880;
+    proxy_pass http://127.0.0.1:3000;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
