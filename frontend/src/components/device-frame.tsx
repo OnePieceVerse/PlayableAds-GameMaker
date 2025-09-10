@@ -57,7 +57,14 @@ export function DeviceFrame({
     const outerW = Math.round(dw / (1 - p.left - p.right));
     const outerH = Math.round(dh / (1 - p.top - p.bottom));
     const { w: cw, h: ch } = containerSize;
-    if (cw === 0 || ch === 0) return { scale: 1, dims: { w: dw, h: dh }, outer: { w: outerW, h: outerH }, padUsed: p, frameUrl } as any;
+    if (cw === 0 || ch === 0)
+      return {
+        scale: 1,
+        dims: { w: dw, h: dh },
+        outer: { w: outerW, h: outerH },
+        padUsed: p,
+        frameUrl,
+      } as { scale: number; dims: { w: number; h: number }; outer: { w: number; h: number }; padUsed: { top: number; bottom: number; left: number; right: number }; frameUrl: string };
     let s = Math.min(cw / outerW, ch / outerH);
     // Portrait：略缩小避免贴边；横屏：尽量占满可用宽度/高度（不变形）
     if (isPortrait) {
@@ -66,15 +73,21 @@ export function DeviceFrame({
       s *= 1.05; // nudge to better utilize width
     }
     if (s > 2) s = 2;
-    return { scale: s, dims: { w: dw, h: dh }, outer: { w: outerW, h: outerH }, padUsed: p, frameUrl } as any;
+    return {
+      scale: s,
+      dims: { w: dw, h: dh },
+      outer: { w: outerW, h: outerH },
+      padUsed: p,
+      frameUrl,
+    } as { scale: number; dims: { w: number; h: number }; outer: { w: number; h: number }; padUsed: { top: number; bottom: number; left: number; right: number }; frameUrl: string };
   }, [orientation, containerSize]);
 
   const adjustedChild = useMemo(() => {
-    if (React.isValidElement(children)) {
+    if (React.isValidElement<{ style?: React.CSSProperties }>(children)) {
       const extraStyle = orientation === "horizontal" ? { height: `${landscapeIframeHeight}px`, width: "100%" } : {};
-      return React.cloneElement(children as any, {
+      return React.cloneElement(children, {
         key: refreshTick,
-        style: { ...(children as any).props?.style, ...extraStyle },
+        style: { ...(children.props.style ?? {}), ...extraStyle },
       });
     }
     return children;

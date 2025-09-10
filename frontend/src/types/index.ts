@@ -10,7 +10,7 @@ export interface TemplateAsset {
   requiredWidth?: number;
   requiredHeight?: number;
   allowResize?: boolean;
-  assetUrl: string;
+  assetUrl?: string;
   maxDurationSec?: number;
   isRequired: boolean;
 }

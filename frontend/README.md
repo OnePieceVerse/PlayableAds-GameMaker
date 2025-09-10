@@ -2,7 +2,7 @@
 
 ### 前置要求
 
-- Node.js ≥ 20（推荐 20 LTS）
+- Node.js ≥ 20（推荐 20 LTS）, 推荐使用 [nvm](https://github.com/nvm-sh/nvm) 管理 node 版本。
 - 全局安装 PM2：`npm i -g pm2`
 - 服务器已安装并启用 Nginx
 - 确认后端地址用于 `NEXT_PUBLIC_API_BASE`
