@@ -30,11 +30,20 @@ type BackendAsset = {
   isRequired: boolean;
 };
 
+import { headers } from "next/headers";
+
 async function getTemplate(id: string): Promise<TemplateDetailDto | null> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/templates/${id}`, { cache: "no-store" });
+    const h = await headers();
+    const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+    const proto = h.get("x-forwarded-proto") || "http";
+    const origin = `${proto}://${host}`;
+    const res = await fetch(`${origin}/api/templates/${id}`, { cache: "no-store" });
     if (!res.ok) return null;
-    return (await res.json()) as TemplateDetailDto;
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) return null;
+    const payload = await res.json().catch(() => ({ data: null }));
+    return (payload?.data as TemplateDetailDto) ?? null;
   } catch {
     return null;
   }

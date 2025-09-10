@@ -20,11 +20,13 @@ async function fetchTemplates(q?: string, cat?: string) {
     analytics?: { editCount?: number; previewCount?: number; exportCount?: number };
   };
   const h = await headers();
-  const host = h.get("host") || "localhost:3000";
+  const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
   const proto = h.get("x-forwarded-proto") || "http";
-  const base = `${proto}://${host}`;
-  const res = await fetch(`${base}/api/templates`, { cache: "no-store" });
+  const origin = `${proto}://${host}`;
+  const res = await fetch(`${origin}/api/templates`, { cache: "no-store" });
   if (!res.ok) return [] as Item[];
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) return [] as Item[];
   const payload = await res.json().catch(() => ({ data: [] }));
   let templates: Item[] = Array.isArray(payload.data) ? payload.data : [];
   if (q) templates = templates.filter((t) => t.templateName.includes(q) || t.description.includes(q));
