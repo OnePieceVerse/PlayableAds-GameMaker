@@ -79,7 +79,7 @@ export default async function TemplateDetailPage({
     return groups;
   }
 
-type ViewAsset = BackendAsset & { assetUrl: string };
+ type ViewAsset = BackendAsset & { assetUrl: string };
 
   const grouped = groupAssets();
 

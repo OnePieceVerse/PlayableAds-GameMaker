@@ -16,11 +16,39 @@ NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run build
 ```
 
 ### 使用 PM2 启动
+使用 `ecosystem.config.js`（推荐，便于统一管理与开机自启）， 在 frontend 目录下创建：
+
+```js
+module.exports = {
+  apps: [
+    {
+      name: "playableall-game-maker-frontend",
+      cwd: __dirname,
+      script: "node_modules/next/dist/bin/next",
+      args: "start -p 18880",
+      instances: 1,
+      exec_mode: "fork",
+      env: {
+        NODE_ENV: "production",
+        NEXT_PUBLIC_API_BASE: "http://localhost:8000"
+      },
+      max_memory_restart: "512M",
+      error_file: "./logs/err.log",
+      out_file: "./logs/out.log",
+      merge_logs: true
+    }
+  ]
+};
+```
+
+启动与自启：
 
 ```bash
-# 假设占用端口 18880，如需更换端口请同步修改 Nginx 配置
-pm2 start npm --name "playableall-game-maker-frontend" -- start -- -p 18880
+mkdir -p logs
+pm2 start ecosystem.config.js
+pm2 status
 pm2 save
+pm2 startup  # 按提示执行命令配置系统开机自启
 ```
 
 ### 配置 Nginx（反向代理到 127.0.0.1:18880）
