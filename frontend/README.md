@@ -12,14 +12,14 @@
 ```bash
 cd frontend
 npm ci
-NEXT_PUBLIC_API_BASE=https://api.example.com npm run build
+NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run build
 ```
 
 ### 使用 PM2 启动
 
 ```bash
 # 假设占用端口 18880，如需更换端口请同步修改 Nginx 配置
-pm2 start npm --name "playable-frontend" -- start -- -p 18880
+pm2 start npm --name "playableall-game-maker-frontend" -- start -- -p 18880
 pm2 save
 ```
 
@@ -27,8 +27,8 @@ pm2 save
 
 ```nginx
 server {
-  listen 80;
-  server_name example.com;
+  listen 8080;
+  server_name playableall-game.woa.com;
 
   location / {
     proxy_pass http://127.0.0.1:18880;
@@ -52,8 +52,8 @@ sudo nginx -t && sudo systemctl reload nginx
 cd frontend
 git pull
 npm ci
-NEXT_PUBLIC_API_BASE=https://api.example.com npm run build
-pm2 reload playable-frontend
+NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run build
+pm2 reload playableall-game-maker-frontend
 ```
 
 ### 备注

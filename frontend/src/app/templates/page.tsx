@@ -24,7 +24,9 @@ async function fetchTemplates(q?: string, cat?: string) {
   const proto = h.get("x-forwarded-proto") || "http";
   const base = `${proto}://${host}`;
   const res = await fetch(`${base}/api/templates`, { cache: "no-store" });
-  let templates: Item[] = (await res.json()).data;
+  if (!res.ok) return [] as Item[];
+  const payload = await res.json().catch(() => ({ data: [] }));
+  let templates: Item[] = Array.isArray(payload.data) ? payload.data : [];
   if (q) templates = templates.filter((t) => t.templateName.includes(q) || t.description.includes(q));
   if (cat && cat !== "全部") templates = templates.filter((t) => (t.category || "通用") === cat);
   return templates;

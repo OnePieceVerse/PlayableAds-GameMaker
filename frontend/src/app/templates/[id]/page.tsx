@@ -30,9 +30,14 @@ type BackendAsset = {
   isRequired: boolean;
 };
 
-async function getTemplate(id: string): Promise<TemplateDetailDto> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/templates/${id}`, { cache: "no-store" });
-  return (await res.json()) as TemplateDetailDto;
+async function getTemplate(id: string): Promise<TemplateDetailDto | null> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"}/templates/${id}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as TemplateDetailDto;
+  } catch {
+    return null;
+  }
 }
 
 export default async function TemplateDetailPage({
@@ -105,7 +110,7 @@ type ViewAsset = BackendAsset & { assetUrl: string };
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {data.tags.map((t, i) => (
+          {(data.tags || []).map((t, i) => (
               <Badge key={`${t}-${i}`} variant="secondary">
                 {t}
               </Badge>
