@@ -107,7 +107,21 @@ async def upload_asset(project_id: str, file: UploadFile = File(...), category: 
             raise HTTPException(404, "Project not found")
         # if p.status != "draft":
         #     raise HTTPException(400, "Project is not in draft status")
-        dst = PROJECTS_ROOT / f"{p.template_id}-{project_id}" / "assets" / category / filename
+        # Validate and normalize inputs
+        if not filename:
+            raise HTTPException(400, "filename is required")
+        # Only keep the base name to prevent any path traversal
+        safe_filename = Path(filename).name
+        if not safe_filename:
+            raise HTTPException(400, "invalid filename")
+
+        normalized_category = (category or "images").strip().lower()
+        if normalized_category in {"image", "audio", "video"}:
+            normalized_category = normalized_category + "s"
+        if normalized_category not in {"images", "audios", "videos"}:
+            raise HTTPException(400, "invalid category")
+
+        dst = PROJECTS_ROOT / f"{p.template_id}-{project_id}" / "assets" / normalized_category / safe_filename
         dst.parent.mkdir(parents=True, exist_ok=True)
         with dst.open("wb") as f:
             while True:
@@ -118,4 +132,4 @@ async def upload_asset(project_id: str, file: UploadFile = File(...), category: 
 
         p.status = "preview_ready"
         s.commit()
-        return {"ok": True}
+        return {"ok": True, "path": str(dst.relative_to(PROJECTS_ROOT))}

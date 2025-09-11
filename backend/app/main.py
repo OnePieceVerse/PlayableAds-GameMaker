@@ -50,3 +50,19 @@ PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/templates-static", StaticFiles(directory=str(TEMPLATES_DIR)), name="templates-static")
 app.mount("/projects-static", StaticFiles(directory=str(PROJECTS_DIR)), name="projects-static")
+
+# Prevent aggressive caching when previewing project assets so that
+# recently uploaded replacements (e.g., audio) take effect immediately.
+@app.middleware("http")
+async def no_cache_for_projects_static(request, call_next):
+    response = await call_next(request)
+    try:
+        path = request.url.path
+        if path.startswith("/projects-static/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+    except Exception:
+        # best-effort; don't block response on header mutation errors
+        pass
+    return response

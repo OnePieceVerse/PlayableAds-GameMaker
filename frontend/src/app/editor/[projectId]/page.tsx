@@ -120,11 +120,12 @@ export default function EditorPage() {
 
       for (const [defId, f] of Object.entries(files)) {
         if (!f) continue;
-        const cat = (tpl.assets.find((a) => a.assetId === defId)?.assetType || "image") + "s";
+        const defAsset = tpl.assets.find((a) => String(a.assetId) === String(defId));
+        const cat = ((defAsset?.assetType) || "image") + "s";
         const fd = new FormData();
         fd.set("file", f as File);
         fd.set("category", cat);
-        const expected = (tpl.assets.find((a) => a.assetId === defId) as { assetFileName?: string } | undefined)?.assetFileName;
+        const expected = (defAsset as { assetFileName?: string } | undefined)?.assetFileName;
         const saveName = expected ? String(expected).split("/").pop() : f.name;
         fd.set("filename", saveName || f.name);
         await fetch(`/api/projects/${params.projectId}/assets`, { method: "POST", body: fd });
@@ -186,8 +187,26 @@ export default function EditorPage() {
                                 <div className="w-full h-full grid place-items-center text-xs text-muted-foreground">未上传</div>
                               )}
                             </div>
+                          ) : a.assetType === "audio" ? (
+                            <div className="w-[220px] h-[120px] rounded-md border bg-muted/50 grid place-items-center">
+                              {previews[a.assetId] ? (
+                                <audio controls className="w-[200px]">
+                                  <source src={previews[a.assetId] as string} />
+                                </audio>
+                              ) : (
+                                <div className="text-xs text-muted-foreground">未上传</div>
+                              )}
+                            </div>
                           ) : (
-                            <div className="w-[220px] h-[120px] rounded-md border bg-muted/50 grid place-items-center text-xs text-muted-foreground">未上传</div>
+                            <div className="w-[220px] h-[120px] rounded-md border bg-muted/50 grid place-items-center overflow-hidden">
+                              {previews[a.assetId] ? (
+                                <video controls className="h-full">
+                                  <source src={previews[a.assetId] as string} />
+                                </video>
+                              ) : (
+                                <div className="text-xs text-muted-foreground">未上传</div>
+                              )}
+                            </div>
                           )}
                           <div className="grid gap-2">
                             <Label htmlFor={`f_${a.assetId}`}>上传新素材</Label>
