@@ -7,7 +7,7 @@ FastAPI 后端，提供模板列表/详情、模板统计、项目创建与素�
 - MySQL 8.x
 - uv（推荐包管理器）: https://github.com/astral-sh/uv
   - 也可使用 pip/venv 运行
-- Supervisor: https://github.com/Supervisor/supervisor, `pip install supervisor`
+- （生产部署推荐）systemd 管理服务进程
 
 ## 目录结构（后端）
 ```
@@ -30,69 +30,30 @@ backend/
 
 运行时会创建目录：
 - `backend/projects/{templateName}-{projectId}`：创建项目时从模板复制生成
-- `backend/projects/uploads/{projectId}/{category}`：素材上传保存目录
+- `backend/exports/{projectId}.zip`：导出 ZIP 文件
 
 ## 环境变量配置
-后端支持两种方式配置数据库连接：
-
-1) 通过 `MYSQL_URL`（同时被健康检查与 ORM 使用，推荐）：
+在 `backend/` 目录下创建 `.env` 文件。切记不要提交到仓库！！！
 ```
-export MYSQL_URL="mysql+pymysql://root:password@127.0.0.1:3306/h5_game_saas?charset=utf8mb4"
+MYSQL_URL="mysql+pymysql://root:password@127.0.0.1:3306/playableads_gamemaker?charset=utf8mb4"
 ```
-
-2) 或者使用分散变量（仅 ORM 使用，`app/db.py` 会读取）：
-```
-export DB_HOST=127.0.0.1
-export DB_PORT=3306
-export DB_USER=root
-export DB_PASSWORD=password
-export DB_NAME=playableads_gamemaker
-```
-
-也可在 `backend/` 目录下创建 `.env` 文件，内容同上，但请不要提交到仓库。
 
 ## 安装与运行
-使用 uv + Supervisor：
-在 backend 目录下创建 `supervisord.conf`，内容如下：
-
-```
-[supervisord]
-logfile=/path/to/your/logs/supervisord.log
-pidfile=/path/to/your/logs/supervisord.pid
-childlogdir=/path/to/your/logs
-
-[program:playableall-game-maker-backend]
-command=/path/to/your/venv/bin/uv run -m app --port 8000
-directory=/path/to/your/app
-autostart=true
-autorestart=true
-redirect_stderr=true
-stdout_logfile=/path/to/your/logs/playableall-game-maker-backend.log
-```
-
-使用 Supervisor 启动服务：
-
+1) 安装依赖（uv）：
 ```
 cd backend
 uv sync
 source .venv/bin/activate
-supervisord -c supervisord.conf
+uv run -m app
 ```
+
+
+说明：使用 systemd-run 创建的是临时单元，重启后不会自动启动；若需开机自启请改用服务文件方式。
+
 服务启动后访问: http://localhost:8000
 
-若健康检查返回数据库错误，请先启动本地 MySQL 并设置环境变量，例如：
-```
-export MYSQL_URL="mysql+pymysql://root:password@127.0.0.1:3306/playableads_gamemaker?charset=utf8mb4"
-```
-或在 `backend/.env` 中配置同名变量。
+若健康检查返回数据库错误，请先检查 MySQL 是否启动，并 `backend/.env` 中设置了正确的环境变量。
 
-使用 pip/venv：
-```
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
 
 
 ## API
