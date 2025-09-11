@@ -56,16 +56,21 @@ export DB_NAME=playableads_gamemaker
 在 backend 目录下创建 `supervisord.conf`，内容如下：
 
 ```
-[program:my_app]
+[supervisord]
+logfile=/path/to/your/logs/supervisord.log
+pidfile=/path/to/your/logs/supervisord.pid
+childlogdir=/path/to/your/logs
+
+[program:playableall-game-maker-backend]
 command=/path/to/your/venv/bin/uv run -m app --port 8000
 directory=/path/to/your/app
 autostart=true
 autorestart=true
 redirect_stderr=true
-stdout_logfile=/path/to/your/logs/playableads-backend.log
+stdout_logfile=/path/to/your/logs/playableall-game-maker-backend.log
 ```
 
-启动 Supervisor：
+使用 Supervisor 启动服务：
 
 ```
 cd backend
