@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
+      // Allow images served by backend in production
+      {
+        protocol: "http",
+        hostname: "9.134.162.182",
+        port: "8000",
+      },
     ],
   },
 };

@@ -20,7 +20,7 @@ INSERT INTO template_assets (
   allowed_formats, max_file_size_kb, required_width, required_height, max_duration_sec, is_required
 ) VALUES
 (@tpl_id, '拼图图片', 'image', 'sample.svg', JSON_ARRAY('svg'), 100, NULL, NULL, TRUE),
-(@tpl_id, '背景图片', 'image', 'background.webp', JSON_ARRAY('webp','jpg','png'), 100, 640, 960, NULL, TRUE),
+(@tpl_id, '背景图片', 'image', 'background.webp', JSON_ARRAY('webp'), 100, 640, 960, NULL, TRUE),
 (@tpl_id, '背景音乐', 'audio', 'background.mp3', JSON_ARRAY('mp3'), 100, NULL, NULL, 20, FALSE),
 (@tpl_id, '成功音效', 'audio', 'success.mp3', JSON_ARRAY('mp3'), 50, NULL, NULL, 1, FALSE),
 (@tpl_id, '失败音效', 'audio', 'fail.mp3', JSON_ARRAY('mp3'), 50, NULL, NULL, 1, FALSE),
@@ -50,7 +50,7 @@ INSERT INTO template_assets (
   template_id, asset_name, asset_type, asset_file_name,
   allowed_formats, max_file_size_kb, required_width, required_height, max_duration_sec, is_required
 ) VALUES
-(@tpl_id, '背景图片', 'image', 'background.jpg', JSON_ARRAY('jpg','png','webp'), 100, NULL, NULL, NULL, TRUE),
+(@tpl_id, '背景图片', 'image', 'background.jpg', JSON_ARRAY('jpg'), 100, NULL, NULL, NULL, TRUE),
 (@tpl_id, '地鼠图片', 'image', 'mole.svg', JSON_ARRAY('svg'), 100, NULL, NULL, NULL, TRUE),
 (@tpl_id, '锤子图片', 'image', 'hammer.png', JSON_ARRAY('png'), 100, NULL, NULL, NULL, TRUE),
 (@tpl_id, '背景音乐', 'audio', 'background.mp3', JSON_ARRAY('mp3'), 100, NULL, NULL, 20, FALSE),
@@ -86,7 +86,7 @@ INSERT INTO template_assets (
   template_id, asset_name, asset_type, asset_file_name,
   allowed_formats, max_file_size_kb, required_width, required_height, max_duration_sec, is_required
 ) VALUES
-(@tpl_id, '背景图片', 'image', 'background.jpg', JSON_ARRAY('jpg','png','webp'), 100, NULL, NULL, NULL, TRUE),
+(@tpl_id, '背景图片', 'image', 'background.jpg', JSON_ARRAY('jpg'), 100, NULL, NULL, NULL, TRUE),
 (@tpl_id, '候选图片A', 'image', 'cat_a.svg', JSON_ARRAY('svg'), 100, NULL, NULL, NULL, TRUE),
 (@tpl_id, '候选图片B', 'image', 'cat_b.svg', JSON_ARRAY('svg'), 100, NULL, NULL, NULL, TRUE),
 (@tpl_id, '候选图片C', 'image', 'cat_c.svg', JSON_ARRAY('svg'), 100, NULL, NULL, NULL, TRUE),

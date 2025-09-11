@@ -7,6 +7,7 @@ FastAPI 后端，提供模板列表/详情、模板统计、项目创建与素�
 - MySQL 8.x
 - uv（推荐包管理器）: https://github.com/astral-sh/uv
   - 也可使用 pip/venv 运行
+- Supervisor: https://github.com/Supervisor/supervisor, `pip install supervisor`
 
 ## 目录结构（后端）
 ```
@@ -51,12 +52,26 @@ export DB_NAME=playableads_gamemaker
 也可在 `backend/` 目录下创建 `.env` 文件，内容同上，但请不要提交到仓库。
 
 ## 安装与运行
-使用 uv（推荐）：
+使用 uv + Supervisor：
+在 backend 目录下创建 `supervisord.conf`，内容如下：
+
+```
+[program:my_app]
+command=/path/to/your/venv/bin/uv run -m app --port 8000
+directory=/path/to/your/app
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/path/to/your/logs/playableads-backend.log
+```
+
+启动 Supervisor：
+
 ```
 cd backend
 uv sync
 source .venv/bin/activate
-uv run -m app
+supervisord -c supervisord.conf
 ```
 服务启动后访问: http://localhost:8000
 

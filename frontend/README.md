@@ -12,7 +12,7 @@
 ```bash
 cd frontend
 npm ci
-NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run build
+NEXT_PUBLIC_API_BASE=http://9.134.162.182:8000 npm run build
 ```
 
 ### 使用 PM2 启动
@@ -30,7 +30,7 @@ module.exports = {
       exec_mode: "fork",
       env: {
         NODE_ENV: "production",
-        NEXT_PUBLIC_API_BASE: "http://localhost:8000"
+        NEXT_PUBLIC_API_BASE: "http://9.134.162.182:8000"
       },
       max_memory_restart: "512M",
       error_file: "./logs/err.log",
@@ -48,7 +48,6 @@ mkdir -p logs
 pm2 start ecosystem.config.js
 pm2 status
 pm2 save
-pm2 startup  # 按提示执行命令配置系统开机自启
 ```
 
 ### 配置 Nginx（反向代理到 127.0.0.1:3000）
@@ -60,6 +59,22 @@ server {
 
   location / {
     proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /templates-static {
+    proxy_pass http://127.0.0.1:8000/templates-static;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /projects-static {
+    proxy_pass http://127.0.0.1:8000/projects-static;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -80,7 +95,7 @@ sudo nginx -t && sudo systemctl reload nginx
 cd frontend
 git pull
 npm ci
-NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run build
+NEXT_PUBLIC_API_BASE=http://9.134.162.182:8000 npm run build
 pm2 reload playableall-game-maker-frontend
 ```
 
